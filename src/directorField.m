@@ -12,7 +12,7 @@ function [defect_points_m, defect_points_p, orderParameter, directors, vars] = d
 %   manuscript "Myofibroblasts slow down defect recombination dynamics in mixed
 %   cell monolayers." Given a (typically merged) fluorescence image, it:
 %     1) Computes a director field (via visualizeCellOrientation.m)
-%     2) Detects defects (via get_all_defects.m)
+%     2) Detects defects (via getTopologicalDefects.m)
 %     3) Computes defect orientations / bookkeeping (via defectOrient1.m)
 %   Processing parameters are written to a text file in the output directory.
 %
@@ -39,7 +39,7 @@ function [defect_points_m, defect_points_p, orderParameter, directors, vars] = d
 %
 % Dependencies
 %   - visualizeCellOrientation.m  (your repo)  : computes directors (and optionally orderParameter)
-%   - get_all_defects.m           (your repo)  : detects defect positions
+%   - getTopologicalDefects.m           (your repo)  : detects defect positions
 %   - defectOrient1.m             (your repo)  : computes defect orientations / updates vars
 %   - MATLAB toolboxes commonly used:
 %       Image Processing Toolbox (recommended)
@@ -82,10 +82,10 @@ end
 % Processing parameters
 % -----------------------------
 params = struct();
-params.gridSpacing    = 60;   % Grid spacing for visualization / defect sampling (pixels)
-params.lineLength     = 45;   % Length of orientation lines (pixels)
+params.gridSpacing    = 30;   % Grid spacing for visualization / defect sampling (pixels)
+params.lineLength     = 25;   % Length of orientation lines (pixels)
 params.lineWidth      = 2;    % Line width for visualization
-params.smoothingSigma = 20;   % Gaussian smoothing sigma
+params.smoothingSigma = 10;   % Gaussian smoothing sigma
 params.lineColor      = 'y';  % Line color for visualization
 params.defthres       = 0.1;  % Defect detection threshold
 
@@ -136,19 +136,19 @@ end
 defect_points_p = zeros(0,2);
 defect_points_m = zeros(0,2);
 
-if exist('get_all_defects', 'file') ~= 2
-    error("Missing dependency: get_all_defects.m is not on the MATLAB path.");
+if exist('getTopologicalDefects', 'file') ~= 2
+    error("Missing dependency: getTopologicalDefects.m is not on the MATLAB path.");
 end
 
 try
     % Some implementations may optionally return vars as a 3rd output.
-    if nargout('get_all_defects') >= 3
-        [defect_points_p, defect_points_m, vars] = get_all_defects(directors, params.defthres, params.gridSpacing, vars);
+    if nargout('getTopologicalDefects') >= 3
+        [defect_points_m, defect_points_p, ~, ~, ~, vars] = getTopologicalDefects(directors, vars, params.gridSpacing);
     else
-        [defect_points_p, defect_points_m] = get_all_defects(directors, params.defthres, params.gridSpacing);
+        [defect_points_m, defect_points_p, ~, ~, ~, vars] = getTopologicalDefects(directors, vars, params.gridSpacing);
     end
 catch ME
-    error("get_all_defects failed: %s", ME.message);
+    error("getTopologicalDefects failed: %s", ME.message);
 end
 
 % Ensure outputs are Nx2
@@ -166,7 +166,7 @@ if ~isempty(defect_points_m)
 end
 
 % -----------------------------
-% 3) Defect orientation bookkeeping (optional but recommended)
+% 3) Defect orientation bookkeeping
 % -----------------------------
 if exist('defectOrient1', 'file') == 2
     try
@@ -182,6 +182,7 @@ if exist('defectOrient1', 'file') == 2
         end
 
         vars = defectOrient1(directors, xP, yP, xM, yM, params.gridSpacing, vars);
+        
     catch ME
         % Non-fatal: keep defects even if orientation step fails
         warning("defectOrient1 failed (continuing): %s", ME.message);

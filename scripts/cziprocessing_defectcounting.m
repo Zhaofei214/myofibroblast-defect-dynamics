@@ -39,8 +39,8 @@ assert(exist(cziFile, "file") == 2, "CZI file not found: %s", cziFile);
 
 % Channel indices for bfGetPlane indexing:
 % NOTE: Bio-Formats uses 0-based channel index in reader.getIndex().
-redChannel   = 1;   % adjust if needed
-greenChannel = 2;   % adjust if needed (set to [] if not used)
+MagentaChannel   = 0;   % adjust if needed
+greenChannel = 1;   % adjust if needed (set to [] if not used)
 
 % Output naming
 runTag = "Processed_Results_750celldensity_50";
@@ -65,7 +65,7 @@ vars = struct('defectFrames', [], ...
 save(fullfile(outputDir, "defectData.mat"), "-struct", "vars");
 
 %% -------------------- Read CZI metadata --------------------
-reader = bfGetReader(cziFile);
+reader = bfGetReader(char(cziFile));
 
 numSeries = reader.getSeriesCount();
 reader.setSeries(0);
@@ -86,7 +86,7 @@ fprintf(fid, "Frame,defectP,defectM,defectTotal,orderParameter\n");
 %% -------------------- Analysis loop --------------------
 for t = 1:numFrames
     % Read channels for this frame (Z=0, T=t-1)
-    imgR = read_and_preprocess_plane(reader, redChannel,   t, bgSigma, stretchLim);
+    imgR = read_and_preprocess_plane(reader, MagentaChannel,   t, bgSigma, stretchLim);
     if ~isempty(greenChannel)
         imgG = read_and_preprocess_plane(reader, greenChannel, t, bgSigma, stretchLim);
         mergedImg = (imgR + imgG) / 2;
@@ -120,7 +120,7 @@ for t = 1:numFrames
     close(figHandle);
 
     % Save director field for this frame
-    directorFieldName = fullfile(outputDir2, sprintf("director_data_%04d.mat", t));
+    directorFieldName = fullfile(outputDir2, sprintf("director_data_%d.mat", t));
     save(directorFieldName, "directors");
 
     if mod(t, 10) == 0 || t == numFrames
