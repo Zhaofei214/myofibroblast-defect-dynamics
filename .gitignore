@@ -1,0 +1,39 @@
+# ======================
+# Raw microscopy data
+# ======================
+data/raw/
+*.czi
+*.tif
+*.tiff
+*.avi
+*.mp4
+
+# ======================
+# Generated outputs
+# ======================
+output/
+Processed_Results_*/
+*.csv
+*.png
+*.pdf
+
+# ======================
+# MATLAB
+# ======================
+*.asv
+*.m~
+*.mex*
+slprj/
+
+# ======================
+# Python / Conda
+# ======================
+__pycache__/
+*.pyc
+.env
+
+# ======================
+# OS junk
+# ======================
+.DS_Store
+Thumbs.db
