@@ -1,0 +1,17 @@
+Dataset: 10% MF
+Input: data/sample/defect_density_decay/Processed_Results_0215_750celldensity_10_03/processed_results.csv
+
+Model: y = A*exp(-x/B) + C
+StartPoints: [2 7 1.5]
+
+Fitting Parameters (95% CI):
+A = 9.89803 (9.03043 – 10.7656)
+B = 8.8562 (7.55432 – 10.1581)
+C = 3.71292 (3.50921 – 3.91662)
+
+Goodness of Fit:
+sse = 105.569
+rsquare = 0.853534
+dfe = 139
+adjrsquare = 0.851427
+rmse = 0.871486

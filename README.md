@@ -33,35 +33,184 @@ Third-party software is not included in this repository and must be installed se
 
 ---
 
+The pipeline can be executed step-by-step or orchestrated using a single entry
+point (`run_all.m`).
+
+---
+
 ## Data Archiving and Processing Pipeline
 
 ### 1. Director Field Calculation and Defect Detection
-The main script for director field computation and defect analysis is:
+
+The main script for director field computation and topological defect detection is:
 
 - `cziprocessing_defectcounting.m`
 
-This script calls the following functions:
-- `directorField.m` — computes the director field from cell orientation data.
-- `visualizeCellOrientation.m` — visualizes the local cell orientation as a director field.
+This script processes raw microscopy data (e.g. `.czi` files), computes local cell
+orientations, and identifies topological defects while conserving topological charge.
+
+It calls or depends on the following functions:
+- `directorField.m` — computes the director field from cell orientation or texture data.
+- `visualizeCellOrientation.m` — visualizes the local cell orientation as a nematic director field.
 - `get_all_defects.m` — identifies and locates all topological defects.
 
----
-
-### 2. Cell Density and Defects
-Cell density is further analyzed using outputs from **PIVlab**.  
-The file `PIVlab.mat` serves as the input for the MATLAB script:
-
-- `overlayVelocityDensity.m`
-
-This script overlays the cell velocity field with the density map and generates violin plots for comparative analysis.
+**Outputs:**
+- `director_data_*.mat`
+- `defectData.mat`
+- `processed_results.csv`
 
 ---
 
-### 3. Cellpose / Segmentation
-Cell segmentation is performed using **Cellpose** in a Python environment.  
-The following commands are used:
+### 2. Defect Type Counting
 
-```bash
-conda activate /Users/zhaofei/miniconda3/envs/cellpose
+Defect statistics are analyzed using:
+
+- `countdefecttype.m`
+
+This script counts defects by type or charge (e.g. +1/2 vs −1/2, integer vs half-integer)
+as a function of time or experimental condition.
+
+**Inputs:**
+- `defectData.mat`
+
+**Outputs:**
+- Summary tables and figures saved under `Results/`
+
+---
+
+### 3. Defect Velocity Analysis
+
+Defect motion is quantified using:
+
+- `defectvelocity.m`
+
+This script tracks defect trajectories over time and computes defect velocities
+and displacement statistics.
+
+**Inputs:**
+- `defectData.mat`
+- (Optional) `director_data_*.mat`
+
+**Outputs:**
+- Defect velocity statistics and plots under `Results/`
+
+---
+
+### 4. P-Distribution / Angular Statistics
+
+Orientational statistics are computed using:
+
+- `Pdistribution.m`
+
+This script calculates angular or order-parameter distributions (e.g. \(P(\theta)\))
+to characterize nematic alignment and orientational order.
+
+**Inputs:**
+- `director_data_*.mat`
+
+**Outputs:**
+- Distribution plots and summary statistics under `Results/`
+
+---
+
+### 5. Defect Density Decay Analysis
+
+Temporal decay of +1/2 defect density is analyzed using:
+
+- `defect_density_decay.m`
+
+This script reads preprocessed CSV files containing defect counts and time indices,
+normalizes defect density by the physical imaging area, and fits the decay using an
+exponential model:
+
+\[
+\rho(t) = A \exp(-t / B) + C
+\]
+
+**Outputs:**
+- Publication-quality plots of defect density versus time
+- Text files summarizing fitted parameters, confidence intervals, and goodness-of-fit
+
+---
+
+### 6. Color-Coded Theta Maps
+
+Spatial maps of nematic orientation are generated using:
+
+- `color_angle_plot.m`
+
+This script computes the local orientation angle
+\(\theta = \mathrm{mod}(\arctan(n_y/n_x), \pi)\)
+from the director field and exports color-coded orientation maps with physical units.
+
+**Inputs:**
+- `director_data_*.mat`
+
+**Outputs:**
+- Theta maps saved under `Results/theta_maps/`
+
+---
+
+### 7. Velocity, Director, and Defect Overlay
+
+Cell velocity fields are combined with director fields and defect locations using:
+
+- `overlay_velocity_director.m`
+
+This script:
+- Loads PIV velocity data (`PIVlab.mat`)
+- Computes velocity magnitude (µm/h)
+- Resizes velocity maps to full-resolution images
+- Overlays director fields and defect positions
+
+**Inputs:**
+- `PIVlab.mat`
+- `director_data_*.mat`
+- `defectData.mat`
+
+**Outputs:**
+- Velocity magnitude `.mat` files
+- High-resolution TIFF overlays in `Results/`
+
+---
+
+### 8. Cell Ratio Verification (Magenta/Green Channels)
+
+Relative cell population ratios are estimated using:
+
+- `cell_ratio_verification.m`
+
+This script thresholds red and green fluorescence channels and computes relative
+cell area fractions to verify experimental mixing ratios.
+
+**Inputs:**
+- RGB fluorescence images (`.tif` / `.png`)
+
+**Outputs:**
+- Cell area ratios printed to the MATLAB command window
+
+---
+
+### 9. Details for using cellPose
+
+Cell segmentation is performed using Cellpose in a Python environment and segmentation outputs are subsequently imported into MATLAB for director and defect analysis. Here is an example of bash command used in this project
+
+conda activate /Users/<your user name>/miniconda3/envs/cellpose
 cd ~/Desktop/Cellpose/750_70_03
 cellpose --dir . --pretrained_model cyto2 --chan 0 --chan2 0 --save_tif --verbose
+
+
+
+### 10. Run-All Entry Point
+
+The entire pipeline can be orchestrated using:
+
+- `run_all.m`
+
+This script initializes the repository environment and provides toggle switches
+to execute individual analysis steps in sequence.
+
+To run the pipeline:
+
+```matlab
+run_all

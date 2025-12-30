@@ -2,10 +2,6 @@
 % Compute and visualize defect velocities from time-resolved defect
 % trajectories obtained from the director-field analysis pipeline.
 %
-% Expected input directory structure (relative to repo root):
-%   Data/<run_name>/
-%       defectData.mat
-%
 % Outputs:
 %   Results/defect_velocity_<run_name>.pdf (or .tif)
 %
