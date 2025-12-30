@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this code in your research, please cite it as below."
+
+title: "Defect Dynamics Analysis Pipeline"
+authors:
+  - family-names: Zheng
+    given-names: Zhaofei
+    affiliation: Yale University
+
+version: 1.0.0
+date-released: 2025-12-31
+
+license: MIT
+
+repository-code: "https://github.com/Zhaofei214/myofibroblast-defect-dynamics"
+
+keywords:
+  - active matter
+  - topological defects
+  - nematic order
+  - cell monolayers
+  - mechanobiology
+  - image analysis
+
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Zheng
+      given-names: Zhaofei
+  title: "Defect dynamics in dense cell monolayers"
+  year: 2025
+  journal: "In preparation"
