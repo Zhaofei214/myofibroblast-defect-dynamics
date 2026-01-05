@@ -1,10 +1,10 @@
 # Data Archiving
 
 **Author:** Zhaofei Zheng  
-**Date:** November 2025
+**Date:** January 2026
 
 ## Introduction
-This repository contains MATLAB-based analysis code for the PNAS manuscript  
+This repository contains MATLAB-based analysis code for paper 
 **“Myofibroblasts slow down defect recombination dynamics in mixed cell monolayers.”**
 
 ---
@@ -200,8 +200,75 @@ cd ~/Desktop/Cellpose/750_70_03
 cellpose --dir . --pretrained_model cyto2 --chan 0 --chan2 0 --save_tif --verbose
 
 
+### 10. Density, Director, and Defect Overlay
 
-### 10. Run-All Entry Point
+Cell density maps are combined with nematic director fields and topological defect locations using:
+
+- `overlay_density_directors_defects.m`
+
+This script:
+- Loads green and red cell density maps (cells/µm²)
+- Constructs single-channel (green/red) and combined RGB density backgrounds
+- Resamples and overlays nematic director fields
+- Overlays ±1/2 topological defect positions
+- Exports publication-quality figures (300 dpi)
+
+**Inputs:**
+- `segmentation/density_maps_frame*.mat`
+- `defectimages/director_data_*.mat`
+- `defectData.mat`
+
+**Outputs:**
+- `overlay_green_directors_frame*.tif`
+- `overlay_red_directors_frame*.tif`
+- `overlay_combined_directors_frame*.tif`  
+  (saved in `Results/`)
+
+### 11. Velocity Spatial Correlation Analysis
+
+Spatial correlations of cell velocity fields are quantified using:
+
+- `velocity_spatial_correlation_two_conditions.m`
+
+This script computes the isotropic spatial velocity correlation function \(C_v(r)\)
+from PIV-derived velocity fields and compares two experimental conditions
+(e.g., different cell densities).
+
+**Inputs:**
+- `PIVlab.mat` (from two condition folders, e.g. `750_50/` and `500_50/`)
+  - `u_filtered`
+  - `v_filtered`
+
+**Outputs:**
+- Spatial velocity correlation plot (`velocity_correlation.png`) saved under `Results/`
+- Printed mean velocity magnitudes for each condition
+
+### 12 Detection on defect and cell dominance
+
+Defects are classified by their local cellular composition (Green vs Pink) and
+topological charge (+1/2 or −1/2) using **binarized density maps**.
+
+- `defect_color_dominance.m`
+
+This script:
+- Loads defect positions and charges from `defectData.mat`
+- Loads per-frame Green/Red density maps and binarizes them (z-score > 0)
+- Classifies each defect based on local G/R dominance within a circular neighborhood
+- Counts Green(+), Green(−), Pink(+), Pink(−), and Unknown defects per frame
+- Produces a clean visualization with four-sided frames and no axis numbers
+
+**Inputs:**
+- `defectData.mat`
+- `segmentation/density_maps_frame*.mat`
+  - `G_cells_per_um2`
+  - `R_cells_per_um2`
+- `defectimages/director_data_*.mat`
+
+**Outputs:**
+- Defect count table (`defect_type_counts.csv`) saved under `Results/`
+
+
+### 13. Run-All Entry Point
 
 The entire pipeline can be orchestrated using:
 

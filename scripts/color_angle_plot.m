@@ -23,7 +23,7 @@
 %   - Further image processing was performed in ImageJ/Fiji to generate cell masks using thresholding.
 %===========================================================
 
-clear; clc; close all;
+close all; clear;
 
 % -------------------- Repo-safe paths (do not use pwd) --------------------
 repoRoot = fileparts(fileparts(mfilename("fullpath"))); % scripts/ → repo root

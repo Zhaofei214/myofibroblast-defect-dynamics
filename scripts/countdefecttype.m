@@ -15,8 +15,7 @@
 % Copyright (c) 2025 Zhaofei Zheng
 % Released under the MIT License. See LICENSE in the repository root.
 
-clear
-clc
+close all; clear;
 
 % -------------------- Repo-safe paths (do not use pwd) --------------------
 repoRoot = fileparts(fileparts(mfilename("fullpath"))); % scripts/ -> repo root
@@ -132,14 +131,14 @@ end
 % --- Per-frame table ---
 T = table((1:numel(countGreenPos))', countGreenPos', countGreenNeg', ...
           countPinkPos', countPinkNeg', countUnknown', ...
-    'VariableNames', {'Frame','GreenPos','GreenNeg','PinkPos','PinkNeg','Unknown'});
+    'VariableNames', {'Frame','GreenPos','GreenNeg','PinkPos','PinkNeg','Unclassified'});
 
 % --- Totals row ---
 totalGreenPos = sum(countGreenPos);
 totalGreenNeg = sum(countGreenNeg);
 totalPinkPos  = sum(countPinkPos);
 totalPinkNeg  = sum(countPinkNeg);
-totalUnknown  = sum(countUnknown);
+totalUnclassified  = sum(countUnknown);
 
 Ttotals = table("Total", totalGreenPos, totalGreenNeg, totalPinkPos, totalPinkNeg, totalUnclassified, ...
     'VariableNames', {'Frame','GreenPos','GreenNeg','PinkPos','PinkNeg','Unclassified'});

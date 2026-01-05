@@ -24,7 +24,7 @@
 %   - Small objects are removed using bwareaopen.
 %===========================================
 
-clear; clc;
+close all; clear;
 
 % -------------------- Repo-safe paths (do not use pwd) --------------------
 repoRoot = fileparts(fileparts(mfilename("fullpath"))); % scripts/ → repo root

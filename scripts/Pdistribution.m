@@ -15,8 +15,7 @@
 % Copyright (c) 2025 Zhaofei Zheng
 % Released under the MIT License. See LICENSE in the repository root.
 
-clear
-clc
+clear;close all;
 
 % -------------------- Repo-safe paths (do not use pwd) --------------------
 repoRoot = fileparts(fileparts(mfilename("fullpath"))); % scripts/ → repo root

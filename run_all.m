@@ -19,12 +19,14 @@ function run_all()
 %
 % License:
 %   MIT License (see LICENSE file in the repository root).
-%   Copyright (c) 2025 Zhaofei Zheng
+%   Copyright (c) 2026 Zhaofei Zheng
+close all; clear; clc;
+
 
 % -------------------- Repo-safe paths (do not use pwd) --------------------
-thisFile = mfilename("fullpath");
+thisFile   = mfilename("fullpath");
 scriptsDir = fileparts(thisFile);
-repoRoot = fileparts(scriptsDir);
+repoRoot   = fileparts(scriptsDir);
 
 % -------------------- Initialize environment --------------------
 if exist('startup.m','file') == 2
@@ -33,6 +35,7 @@ else
     % Minimal fallback: add scripts and common dependency folders
     addpath(scriptsDir);
     if exist(fullfile(repoRoot,'Ctheta'),'dir'); addpath(fullfile(repoRoot,'Ctheta')); end
+    if exist(fullfile(repoRoot,'external'),'dir'); addpath(genpath(fullfile(repoRoot,'external'))); end
 end
 
 fprintf("Repository initialized.\n");
@@ -42,73 +45,75 @@ fprintf("Repo root: %s\n", repoRoot);
 dataRawDir = fullfile(repoRoot, 'Data', 'raw');
 resultsDir = fullfile(repoRoot, 'Results');
 
-if ~exist(dataRawDir, 'dir'), mkdir(dataRawDir); end
-if ~exist(resultsDir, 'dir'), mkdir(resultsDir); end
+if ~exist(dataRawDir, 'dir'); mkdir(dataRawDir); end
+if ~exist(resultsDir, 'dir'); mkdir(resultsDir); end
 
 fprintf("Place raw .czi files in: %s\n", dataRawDir);
 
-
 % -------------------- Optional: run pipeline scripts --------------------
 % Toggle these to true/false depending on what you want to run by default.
-RUN_CZI_PROCESSING    = true;   % e.g., generates processed_results.csv, director_data_*.mat, etc.
-RUN_COUNT_DEFECTTYPE  = true;   % count defects by type/charge
-RUN_DEFECT_VELOCITY   = true;   % defect velocity analysis
-RUN_P_DISTRIBUTION    = true;   % P(distribution) / angular distribution analysis
-RUN_DEFECT_FITTING    = true;   % defect density decay fitting/plot
-RUN_COLOR_THETA_MAPS  = true;   % theta colormap export
-RUN_VELOCITY_OVERLAY  = true;   % velocity + directors + defects overlay
-RUN_CELL_RATIO        = true;   % red/green area ratio check
+RUN_CZI_PROCESSING    = false; % e.g., generates processed_results.csv, director_data_*.mat, etc.
+RUN_DEFECT_FITTING    = false;  % defect density decay fitting/plot
+RUN_COLOR_THETA_MAPS  = false;  % theta colormap export
+RUN_VELOCITY_OVERLAY  = false;  % velocity + directors + defects overlay
+RUN_P_DISTRIBUTION    = false;  % P(theta) / angular distribution analysis
+RUN_DEFECT_VELOCITY   = false;  % defect velocity analysis
+RUN_COUNT_DEFECTTYPE  = false;  % count defects by type/charge
+RUN_CELL_RATIO        = false;  % red/green area ratio check
+RUN_OVERLAY           = false; % overlay of cell density, director field and defect
+RUN_V_CORRELATION     = false; % velocity correlation based on PIV output
+RUN_DEFECT_DOMINANCE  = false; % classify defect type based on cell dominance (G/R)
 
+% Build an ordered pipeline list (keeps numbering consistent even if toggles change)
+steps = {};
 
-% --- CZI processing / defect counting ---
 if RUN_CZI_PROCESSING
-    fprintf("\n[1/8] Running CZI processing / defect counting...\n");
-    run_script_if_exists('cziprocessing_defectcounting');
+    steps(end+1,:) = {"CZI processing / defect counting", "cziprocessing_defectcounting"}; %#ok<AGROW>
 end
-
-% --- Defect density decay fit/plot ---
 if RUN_DEFECT_FITTING
-    fprintf("\n[2/8] Running defect density decay fitting...\n");
-    run_script_if_exists('defect_density_decay');
+    steps(end+1,:) = {"Defect density decay fitting", "defect_density_decay"}; %#ok<AGROW>
 end
-
-% --- Theta maps ---
 if RUN_COLOR_THETA_MAPS
-    fprintf("\n[3/8] Exporting theta maps...\n");
-    run_script_if_exists('color_angle_plot');  % rename to your actual script name
+    steps(end+1,:) = {"Theta colormap export", "color_angle_plot"}; %#ok<AGROW>
 end
-
-% --- Velocity overlay ---
 if RUN_VELOCITY_OVERLAY
-    fprintf("\n[4/8] Generating velocity/director/defect overlays...\n");
-    run_script_if_exists('overlay_velocity_director'); % rename to your actual script name
+    steps(end+1,:) = {"Velocity/director/defect overlay", "overlay_velocity_director"}; %#ok<AGROW>
 end
-
-% --- P-distribution analysis ---
 if RUN_P_DISTRIBUTION
-    fprintf("\n[5/8] Running P-distribution analysis...\n");
-    run_script_if_exists('Pdistribution');
+    steps(end+1,:) = {"P(theta) distribution analysis", "Pdistribution"}; %#ok<AGROW>
 end
-
-% --- Defect velocity analysis ---
 if RUN_DEFECT_VELOCITY
-    fprintf("\n[6/8] Running defect velocity analysis...\n");
-    run_script_if_exists('defectvelocity');
+    steps(end+1,:) = {"Defect velocity analysis", "defectvelocity"}; %#ok<AGROW>
 end
-
-% --- Count defect type (e.g., +1/2 vs -1/2, integer vs half-integer, etc.) ---
 if RUN_COUNT_DEFECTTYPE
-    fprintf("\n[7/8] Running count defect type...\n");
-    run_script_if_exists('countdefecttype');
+    steps(end+1,:) = {"Count defect types", "countdefecttype"}; %#ok<AGROW>
 end
-
-% --- Cell ratio verification ---
 if RUN_CELL_RATIO
-    fprintf("\n[8/8] Running cell ratio verification...\n");
-    run_script_if_exists('cell_ratio_verification'); % rename to your actual script name
+    steps(end+1,:) = {"Cell ratio verification", "cell_ratio_verification"}; %#ok<AGROW>
+end
+if RUN_OVERLAY
+    steps(end+1,:) = {"Overlay density + directors + defects", "overlay_density_directors_defects"}; %#ok<AGROW>
+end
+if RUN_V_CORRELATION
+    steps(end+1,:) = {"Velocity spatial correlation (PIV)", "velocity_spatial_correlation"}; %#ok<AGROW>
+end
+if RUN_DEFECT_DOMINANCE
+    steps(end+1,:) = {"Defect dominance classification (G/R)", "defect_color_dominance"}; %#ok<AGROW>
 end
 
-fprintf("\nDone. Outputs (if enabled) are saved under: %s\n", resultsDir);
+% -------------------- Run pipeline --------------------
+if isempty(steps)
+    fprintf("\nNo steps enabled. Set RUN_* toggles to true in run_all.m.\n");
+    return;
+end
+
+nSteps = size(steps, 1);
+for i = 1:nSteps
+    fprintf("\n[%d/%d] %s...\n", i, nSteps, steps{i,1});
+    run_script_if_exists(steps{i,2});
+end
+
+fprintf("\nDone. Outputs are saved under: %s\n", resultsDir);
 
 end
 
@@ -130,7 +135,6 @@ fprintf("  -> Running %s\n", scriptFile);
 try
     evalin('base', sprintf("run('%s')", scriptName));
 catch ME
-    % Use literal text here so it still works even if something was cleared in base
     warning("Failed running %s: %s", scriptFile, ME.message);
 end
 end

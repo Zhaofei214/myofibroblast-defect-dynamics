@@ -19,7 +19,7 @@
 % Released under the MIT License. See LICENSE in the repository root.
 
 
-clear; clc;
+close all; clear;
 
 % -------------------- Repo-safe paths (do not use pwd) --------------------
 repoRoot = fileparts(fileparts(mfilename("fullpath"))); % scripts/ → repo root

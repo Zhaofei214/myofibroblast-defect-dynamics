@@ -10,7 +10,7 @@
 % Author: Zhaofei Zheng
 % License: MIT (see LICENSE in repo root)
 
-close all; clear; clc;
+close all; clear;
 
 %% -------------------- Paths (portable) --------------------
 repoRoot = fileparts(fileparts(mfilename("fullpath"))); % scripts/ -> repo root
