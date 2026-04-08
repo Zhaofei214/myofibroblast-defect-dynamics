@@ -35,9 +35,9 @@ defectMatPath = fullfile(baseDir, 'defectData.mat');
 D = load(defectMatPath);
 
 % Parameter setting
-edgeSize = 0;         % pixels trimmed from each border
+edgeSize = 0;           % pixels trimmed from each border
 classRadius = 50;       % neighborhood radius (px) for classification
-classMinDiff = 5e-4;   % confidence threshold |G-R| below this => Unknown
+classMinDiff = 8e-4;    % confidence threshold |G-R| below this => Unknown
 classMethod  = 'mean';
 
 defectX_all      = D.defectX(:);
@@ -50,33 +50,33 @@ vals = unique(defectFrame_all);
 numFrame_total = numel(vals);
 
 % Pre-allocate counters
-countGreenPos = zeros(1,numFrame_total);
-countGreenNeg = zeros(1,numFrame_total);
-countPinkPos  = zeros(1,numFrame_total);
-countPinkNeg  = zeros(1,numFrame_total);
-countUnknown  = zeros(1,numFrame_total);
+countGreenPos = zeros(1, numFrame_total);
+countGreenNeg = zeros(1, numFrame_total);
+countPinkPos  = zeros(1, numFrame_total);
+countPinkNeg  = zeros(1, numFrame_total);
+countUnknown  = zeros(1, numFrame_total);
 
 for frameNum = 80:100
     % --- Load density maps & directors for this frame ---
     densityMatPath = fullfile(baseDir, 'segmentation', sprintf('density_maps_frame%d.mat', frameNum));
     directorsPath  = fullfile(baseDir, 'defectimages', sprintf('director_data_%d.mat', frameNum));
-    
+
     % Directors (not used for classification here, but kept to match your flow)
     DD = load(directorsPath);
-    if ~isfield(DD,'directors')
+    if ~isfield(DD, 'directors')
         error('director_data_%d.mat does not contain variable "directors".', frameNum);
     end
     directors = DD.directors; 
-    
+
     % Density maps
     S = load(densityMatPath);   % expects G_cells_per_um2, R_cells_per_um2
-    if ~isfield(S,'G_cells_per_um2') || ~isfield(S,'R_cells_per_um2')
+    if ~isfield(S, 'G_cells_per_um2') || ~isfield(S, 'R_cells_per_um2')
         error('density_maps_frame%d.mat missing required variables.', frameNum);
     end
     densityMapG = S.G_cells_per_um2;
     densityMapR = S.R_cells_per_um2;
 
-    densityMapG =  densityMapG*mean2(densityMapR)/mean2(densityMapG);
+    densityMapG = densityMapG * mean2(densityMapR) / mean2(densityMapG);
 
     % --- Select defects in this frame ---
     idxFrame     = (defectFrame_all == frameNum);
@@ -99,7 +99,6 @@ for frameNum = 80:100
     for t = 1:defectNum
         coord = [defectX(t), defectY(t)];  % [row, col]; if your data are (x,y), swap to [y,x]
 
-        % Use circular neighborhood classification
         colorClass = classifyPointColor( ...
             densityMapG, densityMapR, coord, ...
             'Radius',   classRadius, ...
@@ -138,7 +137,7 @@ totalGreenPos = sum(countGreenPos);
 totalGreenNeg = sum(countGreenNeg);
 totalPinkPos  = sum(countPinkPos);
 totalPinkNeg  = sum(countPinkNeg);
-totalUnclassified  = sum(countUnknown);
+totalUnclassified = sum(countUnknown);
 
 Ttotals = table("Total", totalGreenPos, totalGreenNeg, totalPinkPos, totalPinkNeg, totalUnclassified, ...
     'VariableNames', {'Frame','GreenPos','GreenNeg','PinkPos','PinkNeg','Unclassified'});
@@ -147,23 +146,21 @@ Ttotals = table("Total", totalGreenPos, totalGreenNeg, totalPinkPos, totalPinkNe
 Tall   = [T; Ttotals];
 outFile = fullfile(baseDir, 'defect_type_counts.csv');
 writetable(Tall, outFile);
-T = table(totalGreenPos, totalGreenNeg, totalPinkPos, totalPinkNeg, totalUnclassified);
-disp(T);
+
+Tsummary = table(totalGreenPos, totalGreenNeg, totalPinkPos, totalPinkNeg, totalUnclassified);
+disp(Tsummary);
 
 %% --- Draw histogram plot ---
-% Extract numeric values as an array
-vals = table2array(T);
-% Labels for each bar
-barLabels = {'MF -1/2', 'MF -1/2', 'HDF +1/2', 'HDF +1/2', 'Unclassified'};
+vals = table2array(Tsummary);
+barLabels = {'MF +1/2', 'MF -1/2', 'HDF +1/2', 'HDF -1/2', 'Unclassified'};
 
 % Custom colors (RGB 0–1)
 lightGreen   = [0.6 1.0 0.6];
 green        = [0.0 0.6 0.0];
 magenta      = [1.0 0.0 1.0];
 lightMagenta = [1.0 0.6 1.0];
-grayColor    = [0.5 0.5 0.5];   % for "unknown" if you want
+grayColor    = [0.5 0.5 0.5];
 
-% Combine into color map
 colors = [
     lightGreen;
     green;
@@ -175,35 +172,133 @@ colors = [
 % -----------------------------
 % Plot histogram (bar plot)
 % -----------------------------
-% Make a large figure window (width x height in pixels)
-figure('Position',[100 100 1200 900]);   % <-- Increase size here
+figure('Position',[100 100 1200 800], 'Color', 'w', 'Visible','off');
 
-b = bar(vals,'FaceColor','flat','LineWidth',2);
+b = bar(vals, 'FaceColor', 'flat', 'LineWidth', 2);
 pbaspect([1 1 1]);
 
-% Apply colors to each bar
 for i = 1:numel(vals)
     b.CData(i,:) = colors(i,:);
 end
 
-% Optional: nicer axes formatting
 set(gca, 'FontSize', 24, 'LineWidth', 2, ...
          'FontName', 'Times New Roman');
 
-% -----------------------------
-% Axes formatting
-% -----------------------------
 set(gca, 'XTick', 1:5, 'XTickLabel', barLabels, ...
-         'FontName','Times New Roman', 'FontSize',50, ...
-         'LineWidth',2);
+         'FontName', 'Times New Roman', 'FontSize', 50, ...
+         'LineWidth', 2);
 
-ylabel('Counts','FontName','Times New Roman','FontSize',50);
-%ylim([0 70]);
+ylabel('Counts', 'FontName', 'Times New Roman', 'FontSize', 50);
+box on;
 
-% Save the figure (PNG, 300 dpi)
-resultFilename = fullfile(resultPath, 'defecttype.tif');
+% resultFilename = fullfile(resultPath, 'defecttype.tif');
+% exportgraphics(gcf, resultFilename, 'Resolution', 300);
+
+%% Parameter sampling by changing the threshold
+threshold = [1e-4, 2e-4, 4e-4, 6e-4, 8e-4, 1e-3];
+type1 = [42, 39, 38, 37, 36, 35];
+type2 = [68, 64, 61, 57, 57, 51];
+type3 = [57, 55, 52, 50, 47, 43];
+type4 = [40, 38, 33, 30, 27, 27];
+unclassified = [4, 15, 27, 37, 44, 55];
+
+figure('Color', 'w'); 
+hold on;
+
+plot(threshold, type1, '-o', ...
+    'LineWidth', 2, 'MarkerSize', 8, ...
+    'Color', lightGreen, ...
+    'MarkerFaceColor', lightGreen);
+
+plot(threshold, type2, '-s', ...
+    'LineWidth', 2, 'MarkerSize', 8, ...
+    'Color', green, ...
+    'MarkerFaceColor', green);
+
+plot(threshold, type3, '-^', ...
+    'LineWidth', 2, 'MarkerSize', 8, ...
+    'Color', magenta, ...
+    'MarkerFaceColor', magenta);
+
+plot(threshold, type4, '-d', ...
+    'LineWidth', 2, 'MarkerSize', 8, ...
+    'Color', lightMagenta, ...
+    'MarkerFaceColor', lightMagenta);
+
+plot(threshold, unclassified, '-d', ...
+    'LineWidth', 2, 'MarkerSize', 8, ...
+    'Color', grayColor, ...
+    'MarkerFaceColor', grayColor);
+
+set(gca, 'XScale', 'log');
+set(gca, 'XDir', 'reverse');
+
+xlabel('Threshold', 'FontName', 'Times New Roman', 'FontSize', 28);
+ylabel('Count',     'FontName', 'Times New Roman', 'FontSize', 28);
+
+set(gca, 'FontName', 'Times New Roman', ...
+         'FontSize', 24, ...
+         'LineWidth', 2, ...
+         'TickDir', 'out');
+
+legend({'MF +1/2','MF -1/2','HDF +1/2','HDF -1/2','Unclassfied'}, ...
+    'Location', 'eastoutside', ...
+    'FontName', 'Times New Roman', ...
+    'FontSize', 20, ...
+    'Box', 'off');
+
+box on;
+
+%% Plot the histogram with error bars
+vals = [mean(type1), mean(type2), mean(type3), mean(type4)];
+errs = [std(type1), std(type2), std(type3), std(type4)];
+
+barLabels4 = barLabels(1:4);
+colors4 = colors(1:4,:);
+
+figure('Position',[100 100 1800 1000], 'Color', 'w');
+
+x = 1:4;
+
+b = bar(x, vals, 0.55, 'FaceColor', 'flat', 'LineWidth', 2);
+hold on;
+
+for i = 1:numel(vals)
+    b.CData(i,:) = colors4(i,:);
+end
+
+errorbar(x, vals, errs, ...
+    'k', 'LineStyle', 'none', 'LineWidth', 2, 'CapSize', 18);
+
+% -----------------------------
+% Set axes size manually
+% -----------------------------
+ax = gca;
+left   = 0.12;
+bottom = 0.22;   % give more room for x labels
+width  = 0.6;
+height = 0.50;   % visual 2:1 style without distortion
+ax.Position = [left bottom width height];
+
+% -----------------------------
+% Formatting
+% -----------------------------
+set(gca, 'XTick', x, ...
+         'XTickLabel', barLabels4, ...
+         'FontName', 'Times New Roman', ...
+         'FontSize', 40, ...
+         'LineWidth', 4, ...
+         'TickDir', 'out', ...
+         'Box', 'on' );
+
+ylabel('Counts', 'FontName', 'Times New Roman', 'FontSize', 45);
+xlim([0.4 4.6]);
+ylim([0 70]);
+
+box on;
+
+resultFilename = fullfile(resultPath, 'defecttype_4bars_with_error.tif');
 exportgraphics(gcf, resultFilename, 'Resolution', 300);
-
 
 % ===================== Helper =====================
 function colorClass = classifyPointColor(densityG, densityR, coord, varargin)
@@ -222,8 +317,8 @@ p.addParameter('MinPixels', [],       @(x)isnumeric(x)&&isscalar(x)&&x>=0);
 
 % Weighted options
 p.addParameter('Kernel',    'gaussian', @(s)ischar(s)||isstring(s));
-p.addParameter('Sigma',     [],        @(x)isnumeric(x)&&isscalar(x)&&x>0);  % default set later
-p.addParameter('Power',     2,         @(x)isnumeric(x)&&isscalar(x)&&x>0);  % for invdist
+p.addParameter('Sigma',     [],        @(x)isnumeric(x)&&isscalar(x)&&x>0);
+p.addParameter('Power',     2,         @(x)isnumeric(x)&&isscalar(x)&&x>0);
 p.addParameter('TrimQuantile', 0.1,    @(x)isnumeric(x)&&isscalar(x)&&x>=0&&x<0.5);
 p.parse(varargin{:});
 
@@ -231,31 +326,40 @@ R         = p.Results.Radius;
 minDiff   = p.Results.MinDiff;
 method    = lower(string(p.Results.Method));
 kernel    = lower(string(p.Results.Kernel));
-sigma     = p.Results.Sigma;   % if empty, set to R/2 below
+sigma     = p.Results.Sigma;
 power     = p.Results.Power;
 qtrim     = p.Results.TrimQuantile;
 
 [nRows, nCols] = size(densityG);
-if ~isequal(size(densityG), size(densityR)), error('densityG and densityR size mismatch'); end
-
-row = round(coord(1)); col = round(coord(2));
-if row < 1 || row > nRows || col < 1 || col > nCols
-    colorClass = "Unknown"; return;
+if ~isequal(size(densityG), size(densityR))
+    error('densityG and densityR size mismatch');
 end
 
-% Default MinPixels ~ quarter of the circle area, but at least 10
+row = round(coord(1)); 
+col = round(coord(2));
+if row < 1 || row > nRows || col < 1 || col > nCols
+    colorClass = "Unknown"; 
+    return;
+end
+
 if isempty(p.Results.MinPixels)
     MinPixels = max(10, ceil(pi*R^2/4));
 else
     MinPixels = p.Results.MinPixels;
 end
-if isempty(sigma), sigma = max(R/2, 1); end  % reasonable default width
+if isempty(sigma)
+    sigma = max(R/2, 1);
+end
 
 % Window + distances
-rmin = max(1, row - R); rmax = min(nRows, row + R);
-cmin = max(1, col - R); cmax = min(nCols, col + R);
+rmin = max(1, row - R); 
+rmax = min(nRows, row + R);
+cmin = max(1, col - R); 
+cmax = min(nCols, col + R);
+
 [cc, rr] = meshgrid(cmin:cmax, rmin:rmax);
-dr = rr - row; dc = cc - col;
+dr = rr - row; 
+dc = cc - col;
 d2 = dr.^2 + dc.^2;
 mask = d2 <= R^2;
 
@@ -264,7 +368,8 @@ Rpatch = densityR(rmin:rmax, cmin:cmax);
 valid = mask & ~isnan(Gpatch) & ~isnan(Rpatch);
 
 if nnz(valid) < MinPixels
-    colorClass = "Unknown"; return;
+    colorClass = "Unknown"; 
+    return;
 end
 
 gVals = Gpatch(valid);
@@ -275,38 +380,38 @@ dist = sqrt(d2(valid));
 w = ones(size(dist));
 switch kernel
     case "gaussian"
-        % center gets largest weight; decays with distance
         w = exp(-(dist.^2) / (2*sigma^2));
     case "invdist"
-        % inverse-distance^power; regularize center to avoid Inf
         eps0 = 1e-6;
         w = 1 ./ max(dist, eps0).^power;
     case "linear"
-        % linearly decreasing to 0 at radius R
         w = max(0, 1 - dist / max(R, 1));
     case "tricubic"
-        % smooth compact support: (1 - (r/R)^3)^3  for r<R
         rrel = min(dist / max(R,1), 1);
         w = (1 - rrel.^3).^3;
     otherwise
         error('Unknown Kernel: %s', kernel);
 end
 
-% Normalize weights
 wsum = sum(w);
-if wsum <= 0, colorClass = "Unknown"; return; end
+if wsum <= 0
+    colorClass = "Unknown"; 
+    return;
+end
 w = w / wsum;
 
 % Aggregators
 switch method
     case "mean"
-        Gagg = mean(gVals); Ragg = mean(rVals);
+        Gagg = mean(gVals); 
+        Ragg = mean(rVals);
     case "median"
-        Gagg = median(gVals); Ragg = median(rVals);
+        Gagg = median(gVals); 
+        Ragg = median(rVals);
     case "wmean"
-        Gagg = sum(w .* gVals); Ragg = sum(w .* rVals);
+        Gagg = sum(w .* gVals); 
+        Ragg = sum(w .* rVals);
     case "wtrim"
-        % Weighted trimmed mean: drop tails by weighted quantiles
         [Gagg, Ragg] = weightedTrimmedMean(gVals, rVals, w, qtrim);
     case "wmedian"
         Gagg = weightedQuantile(gVals, w, 0.5);
@@ -327,23 +432,31 @@ end
 
 % --------- helpers ----------
 function [mG, mR] = weightedTrimmedMean(g, r, w, q)
-% Drop lower q and upper q by weighted quantiles, then re-average
-loG = weightedQuantile(g, w, q);   hiG = weightedQuantile(g, w, 1-q);
-loR = weightedQuantile(r, w, q);   hiR = weightedQuantile(r, w, 1-q);
+loG = weightedQuantile(g, w, q);   
+hiG = weightedQuantile(g, w, 1-q);
+loR = weightedQuantile(r, w, q);   
+hiR = weightedQuantile(r, w, 1-q);
+
 maskG = (g >= loG) & (g <= hiG);
 maskR = (r >= loR) & (r <= hiR);
+
 wG = w(maskG); gT = g(maskG); 
 wR = w(maskR); rT = r(maskR);
-wG = wG / sum(wG); wR = wR / sum(wR);
+
+wG = wG / sum(wG); 
+wR = wR / sum(wR);
+
 mG = sum(wG .* gT);
 mR = sum(wR .* rT);
 end
 
 function qv = weightedQuantile(x, w, q)
-% x values, weights w (nonnegative), target quantile q in [0,1]
-[w, idx] = sortrows([x(:), w(:)], 1); % sort by x
-x_sorted = w(:,1); w_sorted = w(:,2);
+tmp = sortrows([x(:), w(:)], 1);
+x_sorted = tmp(:,1); 
+w_sorted = tmp(:,2);
+
 cw = cumsum(w_sorted);
 cw = cw / cw(end);
+
 qv = x_sorted(find(cw >= q, 1, 'first'));
 end

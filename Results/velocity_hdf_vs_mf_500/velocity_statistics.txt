@@ -1,0 +1,14 @@
+Velocity comparison: HDF vs MF
+
+Number of HDF velocity samples: 98890
+Number of MF velocity samples : 71832
+
+Mean velocity of HDF: 6.9722 um/hr
+Mean velocity of MF : 5.7323 um/hr
+
+Two-sample t-test results:
+t-statistic = 49.486126
+degrees of freedom = 170720.000000
+p-value = 0
+95% CI = [1.190744, 1.288957]
+Significance = ***

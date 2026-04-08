@@ -131,3 +131,164 @@ legend(ax, hFit, datasetLabels, ...
 % Save the figure (PNG, 300 dpi)
 resultFilename = fullfile(resultPath, 'defectdensitydecay.tif');
 exportgraphics(gcf, resultFilename, 'Resolution', 300);
+
+%% Draw plot curves of decay constant and platue value
+% Load the Excel file
+data = readtable(fullfile(dataDir,'Data for scatter plot.xlsx'));
+
+% Extract variables
+concentration = data.Concentration;
+
+AreaPixel = [800*800, 800*800];
+Area      = AreaPixel * 2.344 * 2.344 * 1e-6;   % um^2
+
+
+% For B
+B          = data.B;
+B_err_low  = B - data.B_low;
+B_err_high = data.B_high - B;
+
+% For C
+C          = data.C;
+C_err_low  = C - data.C_low;
+C_err_high = data.C_high - C;
+
+% --------- Sort everything by concentration (ascending) ---------
+[concentration, sortIdx] = sort(concentration);  % sort concentrations
+B          = B(sortIdx);
+B_err_low  = B_err_low(sortIdx);
+B_err_high = B_err_high(sortIdx);
+
+C          = C(sortIdx);
+C_err_low  = C_err_low(sortIdx);
+C_err_high = C_err_high(sortIdx);
+
+% ---------------------------------------------------------------
+
+% Load your custom colormap
+addpath('/Users/zhaofei/Documents/MATLAB');
+cols = zfcolors();   % at least 8 rows
+
+n    = numel(concentration);
+gSz  = 3;                          % group size (3 per color)
+nGrp = ceil(n / gSz);
+
+% --- Main figure ---
+fig = figure('Color','w', 'Visible','off');
+ax  = axes('Parent',fig); hold(ax,'on'); box(ax,'on'); grid(ax,'off');
+
+
+% === Main plot: B with error bars ===
+for i = 1:n
+    gi  = ceil(i / gSz);           % group index
+    clr = cols(gi, :);             % pick color from zfcolors
+
+    errorbar(concentration(i), B(i), B_err_low(i), B_err_high(i), ...
+        'o', ...
+        'MarkerFaceColor', clr, ...
+        'MarkerEdgeColor', clr, ...
+        'Color', clr, ...
+        'LineStyle', 'none', ...
+        'CapSize', 12, ...
+        'LineWidth', 2.5, ...
+        'MarkerSize', 12);
+end
+
+xlabel('\Phi_{MF}', ...
+    'FontName', 'Times New Roman', 'FontSize', 18);
+ylabel('$\tau_D$ (h)', ...
+    'Interpreter', 'latex', 'FontName', 'Times New Roman', 'FontSize', 18);
+ylim([3 25])
+xlim([0 70])
+pbaspect([4 3 1])
+set(gca, 'FontName', 'Times New Roman', 'FontSize', 40);
+set(ax, 'FontName','Times New Roman', 'FontSize', 40, ...
+        'LineWidth', 5, 'TickDir','out', 'Box','on');
+
+% === Inset plot: C with error bars ===
+inset_pos  = [0.26, 0.65, 0.25, 0.25];  % [x, y, width, height]
+inset_axes = axes('Position', inset_pos); hold(inset_axes, 'on');
+
+for i = 1:n
+    gi  = ceil(i / gSz);
+    clr = cols(gi, :);
+
+    errorbar(concentration(i), C(i), C_err_low(i), C_err_high(i), ...
+        'o', ...
+        'MarkerFaceColor', 'k', ...
+        'MarkerEdgeColor', 'k', ...
+        'Color', 'k', ...
+        'LineStyle', 'none', ...
+        'CapSize', 10, ...
+        'LineWidth', 1, ...
+        'MarkerSize', 10);
+end
+
+xlabel('\Phi_{MF}', 'FontSize', 6, 'FontName', 'Times New Roman');
+ylabel('$\rho_\infty$', 'Interpreter', 'latex', ...
+    'FontSize', 8, 'FontName', 'Times New Roman');
+xlim([0 70]);
+ylim([1 6]);
+pbaspect([5 4 1])
+
+set(inset_axes, 'FontName', 'Times New Roman', 'FontSize', 25);
+grid(inset_axes, 'off'); box(inset_axes, 'on');
+
+
+% --- Plot figures seperately ---
+%% --- Figure 1: B with error bars ---
+fig1 = figure('Color','w');
+ax1  = axes('Parent',fig1); hold(ax1,'on'); box(ax1,'on');
+
+for i = 1:n
+    gi  = ceil(i / gSz);
+    clr = cols(gi, :);
+
+    h = errorbar(concentration(i), B(i), B_err_low(i), B_err_high(i), ...
+        'o', ...
+        'MarkerFaceColor', 'k', ...
+        'MarkerEdgeColor', 'k', ...
+        'Color', [0.6 0.6 0.6], ...   % gray error bars
+        'LineStyle', 'none', ...
+        'CapSize', 12, ...
+        'LineWidth', 2.5, ...
+        'MarkerSize', 12);
+
+h.MarkerEdgeColor = 'k';  % restore marker edge to black
+end
+
+xlabel('\Phi_{MF}', 'FontName', 'Times New Roman', 'FontSize', 40);
+ylabel('$\tau_D$ (h)', 'Interpreter','latex', ...
+    'FontName','Times New Roman','FontSize',40);
+ylim([3 20]); xlim([0 70]);
+pbaspect([4 3 1])
+set(ax1, 'FontName','Times New Roman','FontSize',35, ...
+         'LineWidth',4,'TickDir','out','Box','on');
+
+%% --- Figure 2: C with error bars ---
+fig2 = figure('Color','w');
+ax2  = axes('Parent',fig2); hold(ax2,'on'); box(ax2,'on');
+
+for i = 1:n
+    gi  = ceil(i / gSz);
+    clr = cols(gi, :);
+
+    h = errorbar(concentration(i), C(i), C_err_low(i), C_err_high(i), ...
+        'o', ...
+        'MarkerFaceColor', 'k', ...
+        'MarkerEdgeColor', 'k', ...
+        'Color', [0.6 0.6 0.6], ...   % gray error bars
+        'LineStyle', 'none', ...
+        'CapSize', 12, ...
+        'LineWidth', 2.5, ...
+        'MarkerSize', 12);
+
+h.MarkerEdgeColor = 'k';  % restore marker edge to black
+end
+
+xlabel('\Phi_{MF}', 'FontName','Times New Roman','FontSize',40);
+ylabel('\rho_{\infty} (1/mm^2)', 'FontName','Times New Roman','FontSize',40);
+xlim([0 70]); ylim([1 6]);
+pbaspect([4 3 1])
+set(ax2, 'FontName','Times New Roman','FontSize',35, ...
+         'LineWidth',4,'TickDir','out','Box','on');
