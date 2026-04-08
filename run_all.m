@@ -52,7 +52,7 @@ fprintf("Place raw .czi files in: %s\n", dataRawDir);
 
 % -------------------- Optional: run pipeline scripts --------------------
 % Toggle these to true/false depending on what you want to run by default.
-RUN_CZI_PROCESSING    = false; % e.g., generates processed_results.csv, director_data_*.mat, etc.
+RUN_CZI_PROCESSING    = false;  % e.g., generates processed_results.csv, director_data_*.mat, etc.
 RUN_DEFECT_FITTING    = false;  % defect density decay fitting/plot
 RUN_COLOR_THETA_MAPS  = false;  % theta colormap export
 RUN_VELOCITY_OVERLAY  = false;  % velocity + directors + defects overlay
@@ -60,9 +60,10 @@ RUN_P_DISTRIBUTION    = false;  % P(theta) / angular distribution analysis
 RUN_DEFECT_VELOCITY   = false;  % defect velocity analysis
 RUN_COUNT_DEFECTTYPE  = false;  % count defects by type/charge
 RUN_CELL_RATIO        = false;  % red/green area ratio check
-RUN_OVERLAY           = false; % overlay of cell density, director field and defect
-RUN_V_CORRELATION     = false; % velocity correlation based on PIV output
-RUN_DEFECT_DOMINANCE  = false; % classify defect type based on cell dominance (G/R)
+RUN_OVERLAY           = false;  % overlay of cell density, director field and defect
+RUN_V_CORRELATION     = false;  % velocity correlation based on PIV output
+RUN_DEFECT_DOMINANCE  = false;  % classify defect type based on cell dominance (G/R)
+RUN_VELOCITY_HDF_MF   = false;  % compare the HDF and MD cell velocity at 500 cell density
 
 % Build an ordered pipeline list (keeps numbering consistent even if toggles change)
 steps = {};
@@ -99,6 +100,9 @@ if RUN_V_CORRELATION
 end
 if RUN_DEFECT_DOMINANCE
     steps(end+1,:) = {"Defect dominance classification (G/R)", "defect_color_dominance"}; %#ok<AGROW>
+end
+if RUN_VELOCITY_HDF_MF
+    steps(end+1,:) = {"HDF MF velocity comparasion at 500 cell density", "velocity_hdf_vs_mf_500"}; %#ok<AGROW>
 end
 
 % -------------------- Run pipeline --------------------

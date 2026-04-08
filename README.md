@@ -243,7 +243,7 @@ from PIV-derived velocity fields and compares two experimental conditions
 - Spatial velocity correlation plot (`velocity_correlation.png`) saved under `Results/`
 - Printed mean velocity magnitudes for each condition
 
-### 12 Detection on defect and cell dominance
+### 12. Detection on defect and cell dominance
 
 Defects are classified by their local cellular composition (Green vs Pink) and
 topological charge (+1/2 or −1/2) using **binarized density maps**.
@@ -266,6 +266,48 @@ This script:
 
 **Outputs:**
 - Defect count table (`defect_type_counts.csv`) saved under `Results/`
+
+### 13. Velocity comparison between HDF and MF at 500 cells mm$^{-2}$
+
+Cell motility is quantified from linked nucleus trajectories exported from
+TrackMate and compared between **HDF** and **MF** using per-step velocity
+measurements.
+
+- `velocity_hdf_vs_mf_500.m`
+
+This script:
+- Loads linked nucleus tracking data from a CSV file
+- Sorts trajectories by track ID and frame number
+- Computes frame-to-frame displacement for each track
+- Converts displacement from pixels to microns using the pixel size
+- Calculates velocity in $\mu$m h$^{-1}$ using the frame interval
+- Assigns each velocity step to the corresponding cell type (`HDF` or `MF`)
+- Saves all per-step velocities to a CSV file
+- Compares HDF and MF motility using:
+  - histogram distributions
+  - boxplots
+  - kernel density estimation curves
+  - two-sample t-test statistics
+- Exports publication-style figures and a statistics summary
+
+**Inputs:**
+- `data/sample/velocity_hdf_vs_mf_500/linked_tracks_with_celltype.csv`
+  - `TRACK_ID`
+  - `Linked_X_px`
+  - `Linked_Y_px`
+  - `Linked_Frame_1based`
+  - `CellType`
+
+**User-defined parameters:**
+- `pixelSize_um = 2.344` micron/pixel
+- `dt_hr = 0.5` hour
+
+**Outputs:**
+- `Results/velocity_hdf_vs_mf_500/velocity_HDF_vs_MF.csv`
+- `Results/velocity_hdf_vs_mf_500/velocity_statistics.txt`
+- `Results/velocity_hdf_vs_mf_500/velocity_histogram_hdf_vs_mf.tif`
+- `Results/velocity_hdf_vs_mf_500/velocity_boxplot_hdf_vs_mf.tif`
+- `Results/velocity_hdf_vs_mf_500/velocity_density_hdf_vs_mf.tif`
 
 
 ### 13. Run-All Entry Point
