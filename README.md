@@ -199,6 +199,8 @@ conda activate /Users/<your user name>/miniconda3/envs/cellpose
 cd ~/Desktop/Cellpose/750_70_03
 cellpose --dir . --pretrained_model cyto2 --chan 0 --chan2 0 --save_tif --verbose
 
+---
+
 
 ### 10. Density, Director, and Defect Overlay
 
@@ -224,6 +226,9 @@ This script:
 - `overlay_combined_directors_frame*.tif`  
   (saved in `Results/`)
 
+---
+
+
 ### 11. Velocity Spatial Correlation Analysis
 
 Spatial correlations of cell velocity fields are quantified using:
@@ -242,6 +247,8 @@ from PIV-derived velocity fields and compares two experimental conditions
 **Outputs:**
 - Spatial velocity correlation plot (`velocity_correlation.png`) saved under `Results/`
 - Printed mean velocity magnitudes for each condition
+
+---
 
 ### 12. Detection on defect and cell dominance
 
@@ -266,6 +273,8 @@ This script:
 
 **Outputs:**
 - Defect count table (`defect_type_counts.csv`) saved under `Results/`
+
+---
 
 ### 13. Velocity comparison between HDF and MF at 500 cells mm$^{-2}$
 
@@ -309,8 +318,9 @@ This script:
 - `Results/velocity_hdf_vs_mf_500/velocity_boxplot_hdf_vs_mf.tif`
 - `Results/velocity_hdf_vs_mf_500/velocity_density_hdf_vs_mf.tif`
 
+---
 
-### 13. Run-All Entry Point
+### 14. Run-All Entry Point
 
 The entire pipeline can be orchestrated using:
 
